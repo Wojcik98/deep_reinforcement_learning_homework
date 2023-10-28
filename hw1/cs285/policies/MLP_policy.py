@@ -22,10 +22,10 @@ from cs285.policies.base_policy import BasePolicy
 
 
 def build_mlp(
-        input_size: int,
-        output_size: int,
-        n_layers: int,
-        size: int
+    input_size: int,
+    output_size: int,
+    n_layers: int,
+    size: int
 ) -> nn.Module:
     """
         Builds a feedforward neural network
@@ -73,16 +73,18 @@ class MLPPolicySL(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
     update:
         Trains the policy with a supervised learning objective
     """
-    def __init__(self,
-                 ac_dim,
-                 ob_dim,
-                 n_layers,
-                 size,
-                 learning_rate=1e-4,
-                 training=True,
-                 nn_baseline=False,
-                 **kwargs
-                 ):
+
+    def __init__(
+        self,
+        ac_dim,
+        ob_dim,
+        n_layers,
+        size,
+        learning_rate=1e-4,
+        training=True,
+        nn_baseline=False,
+        **kwargs
+    ):
         super().__init__(**kwargs)
 
         # init vars
@@ -101,7 +103,6 @@ class MLPPolicySL(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
         )
         self.mean_net.to(ptu.device)
         self.logstd = nn.Parameter(
-
             torch.zeros(self.ac_dim, dtype=torch.float32, device=ptu.device)
         )
         self.logstd.to(ptu.device)
@@ -109,6 +110,7 @@ class MLPPolicySL(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
             itertools.chain([self.logstd], self.mean_net.parameters()),
             self.learning_rate
         )
+        self.loss = nn.MSELoss()
 
     def save(self, filepath):
         """
@@ -129,9 +131,10 @@ class MLPPolicySL(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
         # through it. For example, you can return a torch.FloatTensor. You can also
         # return more flexible objects, such as a
         # `torch.distributions.Distribution` object. It's up to you!
-        raise NotImplementedError
+        out = self.mean_net(observation)
+        return out
 
-    def update(self, observations, actions):
+    def update(self, observations: np.ndarray, actions: np.ndarray, **kwargs) -> dict:
         """
         Updates/trains the policy
 
@@ -140,8 +143,12 @@ class MLPPolicySL(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
         :return:
             dict: 'Training Loss': supervised learning loss
         """
+        self.optimizer.zero_grad()
+        y = self(ptu.from_numpy(observations))
         # TODO: update the policy and return the loss
-        loss = TODO
+        loss = self.loss(y, ptu.from_numpy(actions))
+        loss.backward()
+        self.optimizer.step()
         return {
             # You can add extra logging information here, but keep this line
             'Training Loss': ptu.to_numpy(loss),
