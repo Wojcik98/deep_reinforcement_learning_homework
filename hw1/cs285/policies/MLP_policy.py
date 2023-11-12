@@ -126,7 +126,7 @@ class MLPPolicySL(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
         :return:
             action: sampled action(s) from the policy
         """
-        # TODO: implement the forward pass of the network.
+        # DONE: implement the forward pass of the network.
         # You can return anything you want, but you should be able to differentiate
         # through it. For example, you can return a torch.FloatTensor. You can also
         # return more flexible objects, such as a
@@ -145,7 +145,7 @@ class MLPPolicySL(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
         """
         self.optimizer.zero_grad()
         y = self(ptu.from_numpy(observations))
-        # TODO: update the policy and return the loss
+        # DONE: update the policy and return the loss
         loss = self.loss(y, ptu.from_numpy(actions))
         loss.backward()
         self.optimizer.step()
