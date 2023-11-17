@@ -22,22 +22,25 @@ def sample_trajectory(
         # render an image
         if render:
             if hasattr(env, "sim"):
+                # print("using sim")
                 img = env.sim.render(camera_name="track", height=500, width=500)[::-1]
             else:
+                # print("using env")
                 img = env.render(mode="single_rgb_array")
             image_obs.append(
                 cv2.resize(img, dsize=(250, 250), interpolation=cv2.INTER_CUBIC)
             )
 
-        # TODO use the most recent ob and the policy to decide what to do
-        ac: np.ndarray = None
+        # DONE use the most recent ob and the policy to decide what to do
+        ac = policy.get_action(ob)
+        # ac = ptu.to_numpy(ac)
 
-        # TODO: use that action to take a step in the environment
-        next_ob, rew, done, _ = None, None, None, None
+        # DONE: use that action to take a step in the environment
+        next_ob, rew, done, _ = env.step(ac)
 
-        # TODO rollout can end due to done, or due to max_length
+        # DONE rollout can end due to done, or due to max_length
         steps += 1
-        rollout_done: bool = None
+        rollout_done: bool = (steps == max_length) or done
 
         # record result of taking that action
         obs.append(ob)
